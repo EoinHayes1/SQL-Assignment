@@ -91,7 +91,7 @@ CREATE TABLE `hired` (
 
 LOCK TABLES `hired` WRITE;
 /*!40000 ALTER TABLE `hired` DISABLE KEYS */;
-INSERT INTO `hired` VALUES (509,40010),(508,40012),(507,40016),(506,40019),(505,40020),(504,40024),(503,40031),(502,40033),(501,40035);
+INSERT INTO `hired` VALUES (510,40007),(509,40010),(508,40012),(507,40016),(506,40019),(505,40020),(504,40024),(503,40031),(502,40033),(501,40035);
 /*!40000 ALTER TABLE `hired` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -139,8 +139,9 @@ CREATE TABLE `interviews` (
   KEY `fk_hospital_id_idx` (`hospital_id`),
   KEY `fk_cand_id_idx` (`candidate_id`),
   KEY `fk_pos_ad_idx` (`position_advertised`),
-  CONSTRAINT `fk_canndidi` FOREIGN KEY (`candidate_id`) REFERENCES `candidate` (`candidate_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `fk_hos_id` FOREIGN KEY (`hospital_id`) REFERENCES `hospitals` (`hospital_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+  CONSTRAINT `fk_canndidi` FOREIGN KEY (`candidate_id`) REFERENCES `candidate` (`candidate_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `fk_hos_id` FOREIGN KEY (`hospital_id`) REFERENCES `hospitals` (`hospital_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `fk_pos_avail` FOREIGN KEY (`position_advertised`) REFERENCES `positions_available` (`position_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -187,12 +188,12 @@ DROP TABLE IF EXISTS `positions_available`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `positions_available` (
   `position_id` int NOT NULL,
-  `hosipital_id` int NOT NULL,
+  `hospital_id` int NOT NULL,
   `number_of_available_positions` int DEFAULT '0',
-  PRIMARY KEY (`position_id`,`hosipital_id`),
-  KEY `fk_hospital_idx` (`hosipital_id`),
-  CONSTRAINT `fk_hos2` FOREIGN KEY (`hosipital_id`) REFERENCES `hospitals` (`hospital_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_pok` FOREIGN KEY (`position_id`) REFERENCES `position` (`job_id`) ON DELETE CASCADE ON UPDATE CASCADE
+  PRIMARY KEY (`position_id`,`hospital_id`),
+  KEY `fk_hospital_idx` (`hospital_id`),
+  CONSTRAINT `fk_hos2` FOREIGN KEY (`hospital_id`) REFERENCES `hospitals` (`hospital_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `fk_pok` FOREIGN KEY (`position_id`) REFERENCES `position` (`job_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -215,11 +216,11 @@ DROP TABLE IF EXISTS `positions_skills`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `positions_skills` (
   `position_id` int NOT NULL,
-  `position_skils` int NOT NULL,
-  PRIMARY KEY (`position_id`,`position_skils`),
-  KEY `fk_skillid_idx` (`position_skils`),
-  CONSTRAINT `fk_pos_skills` FOREIGN KEY (`position_id`) REFERENCES `position` (`job_id`),
-  CONSTRAINT `fk_skillid` FOREIGN KEY (`position_skils`) REFERENCES `skill` (`skill_id`)
+  `position_skills` int NOT NULL,
+  PRIMARY KEY (`position_id`,`position_skills`),
+  KEY `fk_skillid_idx` (`position_skills`),
+  CONSTRAINT `fk_pos_skills` FOREIGN KEY (`position_id`) REFERENCES `position` (`job_id`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_skillid` FOREIGN KEY (`position_skills`) REFERENCES `skill` (`skill_id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -350,7 +351,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `insert_hospital`(IN p_hospital_id int, IN p_hospital_name varchar(45), IN p_hospital_address varchar(100), IN hospital_phone int)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `insert_hospital`(IN p_hospital_id int, IN p_hospital_name varchar(45), IN p_hospital_address varchar(100), IN p_hospital_phone int)
 BEGIN
 insert into hospitals (hospital_id, hospital_name, hospital_address, hospital_phone) values (p_hospital_id, p_hospital_name, p_hospital_address, p_hospital_phone);
 END ;;
@@ -388,9 +389,9 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `insert_new_available_position`(IN p_psotion_id int, IN p_hospital_id int, IN p_number_of_available_positions int)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `insert_new_available_position`(IN p_position_id int, IN p_hospital_id int, IN p_number_of_available_positions int)
 BEGIN
-insert into positions_available (postion_id, hospital_id, number_of_available_positions) values (p_postion_id, p_hospital_id, p_number_of_available_positions);
+insert into positions_available (position_id, hospital_id, number_of_available_positions) values (p_position_id, p_hospital_id, p_number_of_available_positions);
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -428,7 +429,7 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `insert_skill_required_for_position`(IN p_position_id int, IN p_position_skills int)
 BEGIN
-insert into position_skills (position_id, position_skills) values (p_position_id, p_position_skills);
+insert into positions_skills (position_id, position_skills) values (p_position_id, p_position_skills);
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -447,10 +448,10 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `Q10_only_interviewed_once_given_date`(IN p_date_of_interview date)
 BEGIN
-select count(interview_id) as times_interviewed, candidate_id from interviews
+select candidate_id from interviews
 where date_of_interview = p_date_of_interview
 group by candidate_id 
-having times_interviewed = 1; 
+having count(candidate_id) = 1; 
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -469,10 +470,10 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `q11_interviewed_more_than_once`()
 BEGIN
-select count(interview_id) as times_interviewed, i.candidate_id, c.firstname, c.surname from interviews i, candidate c
+select i.candidate_id, c.firstname, c.surname from interviews i, candidate c
 where c.candidate_id = i.candidate_id
 group by candidate_id 
-having times_interviewed > 1; 
+having count(i.candidate_id) > 1; 
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -510,7 +511,7 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `Q2_find_hospitals_given_name`(IN p_hospital_name varchar(100))
 BEGIN
-select * from hospitals where hosiptal_name = p_hospital_name;
+select * from hospitals where hospital_name = p_hospital_name;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -549,7 +550,7 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `Q4_Select_skills`(IN p_position_id int)
 BEGIN
 select cs.candidate_id from candidate_skills cs, positions_skills ps
-where cs.skills_id = ps.position_skils and position_id = p_position_id;
+where cs.skills_id = ps.position_skills and position_id = p_position_id;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -589,7 +590,7 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `Q6_jobs_matching_skill_id`(IN p_skill_id int)
 BEGIN
 select p.position_type from positions_skills ps, skill s, position p
-where s.skill_id = ps.position_skils and p.job_id = ps.position_id and s.skill_id = p_skill_id;
+where s.skill_id = ps.position_skills and p.job_id = ps.position_id and s.skill_id = p_skill_id;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -609,7 +610,7 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `Q7_number_of_positions_needing_nursing`()
 BEGIN
 select count(ps.position_id) from positions_skills ps, skill s 
-where ps.position_skils = s.skill_id and skill_name = 'Nursing';
+where ps.position_skills = s.skill_id and skill_name = 'Nursing';
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -629,7 +630,7 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `Q8_order_jobs_by_hospital_name`()
 BEGIN
 select h.hospital_name, p.position_type  from hospitals h, position p, positions_available pa
-where h.hospital_id = pa.hosipital_id and pa.position_id = p.job_id
+where h.hospital_id = pa.hospital_id and pa.position_id = p.job_id
 order by hospital_name asc, position_type asc;
 END ;;
 DELIMITER ;
@@ -667,4 +668,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2020-11-23 23:44:01
+-- Dump completed on 2020-11-24 13:11:59
