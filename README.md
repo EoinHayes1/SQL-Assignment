@@ -1,0 +1,12 @@
+Our task was to create a factious hospital database and write the following quearies using stored procedures: 
+- Find the hospitals with a given hospital identifier. 
+- Find the hospitals with a given name. 
+- Find the candidates with a given surname. 
+- Find the candidates who have at least one skill required by a given position identifier. 
+- Find the number of candidates that have been offered a position. 
+- Find the positions requiring a given skill. 
+- Find the number of positions that require nursing skills. 
+- Find the positions sorted according to the hospitals who are advertising them. 
+- Find the interviews that occurred on a given date. 
+- Find the identifier of candidates that were interviewed only on a specific date. 
+- Find the name and identifier of candidates that were interviewed at least twice.  
